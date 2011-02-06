@@ -1,0 +1,16 @@
+fallback/const-xs.inc
+fallback/const-c.inc
+README
+Makefile.PL
+t/01_mutex.t
+t/04_foreach_array.t
+t/02_rw_mutex.t
+t/05_foreach_hash.t
+t/03_repeat.t
+MANIFEST
+ppport.h
+Changes
+lib/AnyEvent/Tools/Mutex.pm
+lib/AnyEvent/Tools/RWMutex.pm
+lib/AnyEvent/Tools.pm
+META.yml                                 Module meta-data (added by MakeMaker)
