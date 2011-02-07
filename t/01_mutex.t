@@ -26,22 +26,24 @@ BEGIN {
 {
     my $mutex = mutex;
 
-    my $counter = 0;
+    my ($counter, $total) = (0, 0);
+
     my $cv = condvar AnyEvent;
 
     my ($timer1, $timer2, $timer3);
-    $timer1 = AE::timer 0, 0.004 => sub {
+    $timer1 = AE::timer 0, 0.04 => sub {
+        $total++;
         if ($mutex->is_locked) {
             $counter++;
         }
     };
 
-    $timer2 = AE::timer 0.04, 0 => sub {
+    $timer2 = AE::timer 0.2, 0 => sub {
         $mutex->lock(sub {
             my ($g) = @_;
             undef $timer2;
             my $timer;
-            $timer = AE::timer 0.06, 0 => sub {
+            $timer = AE::timer 0.4, 0 => sub {
                 undef $g;
                 undef $timer;
             };
@@ -49,13 +51,14 @@ BEGIN {
         return;
     };
 
-    $timer3 = AE::timer .2, 0 => sub {
+    $timer3 = AE::timer 1, 0 => sub {
         $cv->send;
     };
 
     $cv->recv;
 
-    ok $counter < 20 && $counter > 10, "Mutex was locked correct time";
+    ok $counter < 13 && $counter > 8,
+        "Mutex was locked correct time ($counter/$total)";
 }
 
 {
