@@ -1,0 +1,5 @@
+libanyevent-tools-perl (0.02-1) unstable; urgency=low
+
+  * Initial release. (Closes: #XXXXXX)
+
+ -- Dmitry E. Oboukhov <unera@debian.org>  Mon, 07 Feb 2011 17:57:12 +0300

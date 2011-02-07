@@ -12,9 +12,10 @@ use AnyEvent;
 our @ISA = qw(Exporter);
 
 our %EXPORT_TAGS = (
-    all     => [ qw( mutex rw_mutex async_for async_repeat async_rfor) ],
+    all     => [ qw( mutex rw_mutex async_for async_repeat async_rfor pool ) ],
     mutex   => [ qw( mutex rw_mutex ) ],
     foreach => [ qw( async_for async_rfor async_repeat )   ],
+    pool    => [ qw( pool ) ],
 
 
 );
@@ -23,33 +24,45 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = qw();
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
+sub pool(@)
+{
+    require AnyEvent::Tools::Pool;
 
-sub mutex
+    no strict 'refs';
+    no warnings 'redefine';
+    *{ __PACKAGE__ . "::pool" } = sub (@) {
+        return AnyEvent::Tools::Pool->new(@_);
+    };
+
+    goto &pool;
+}
+
+sub mutex()
 {
     require AnyEvent::Tools::Mutex;
 
     no strict 'refs';
     no warnings 'redefine';
-    *{ __PACKAGE__ . "::mutex" } = sub {
+    *{ __PACKAGE__ . "::mutex" } = sub () {
         return AnyEvent::Tools::Mutex->new;
     };
 
     goto &mutex;
 }
 
-sub rw_mutex
+sub rw_mutex()
 {
     require AnyEvent::Tools::RWMutex;
 
     no strict 'refs';
     no warnings 'redefine';
-    *{ __PACKAGE__ . "::mutex" } = sub {
+    *{ __PACKAGE__ . "::rw_mutex" } = sub () {
         return AnyEvent::Tools::RWMutex->new;
     };
 
-    goto &mutex;
+    goto &rw_mutex;
 }
 
 sub _async_repeati($$&;&);
@@ -204,6 +217,27 @@ __END__
 AnyEvent::Tools - instrument collection for L<AnyEvent>.
 
 =head1 SYNOPSIS
+
+=head2 Objects pool
+
+    use AnyEvent::Tools qw(pool);
+    my $dbh1 = ...
+    my $dbh2 = ...
+
+    ...
+    my $dbhN = ...
+
+
+    my $pool = pool($dbh1, $dbh2, $dbh3, ..., $dbhN);
+
+    # later
+    ...
+    $pool->get(sub {
+        my ($guard, $dbh) = @_;
+        ... # Enjoy $dbh here
+
+        undef $guard;           # the other process can use the $dbh
+    });
 
 
 =head2 Mutexes
@@ -494,6 +528,39 @@ The iteration is the last.
 =head2 async_rfor(HASREF|ARRAYREF, CALLBACK [, DONE_CALLBACK ]);
 
 The same as async_for but has reverse sequence.
+
+
+=head2 pool
+
+Returns the object that incapsulates object collection. You can cacth one
+object of the collection using the method:
+
+=head3 get($callback)
+
+    $pool->get(sub { my ($guard, $object) = @_; ... });
+
+If there is a free object in pool, it will call Your callback.
+The callback receives a guard. Hold the guard while You use the
+object.
+
+
+There are also a few methods:
+
+=head3 push($object);
+
+    my $id = $pool->push($dbh);
+
+Add an object in pool. Returns the object's identifier. You can use
+that to delete the object from pool:
+
+=head3 delete($id)
+
+    $pool->delete($id);
+    $pool->delete($id, sub { # on_delete });
+
+Deletes object from pool.
+
+B<Note>: The function will croak if it receives ivalid object id.
 
 =cut
 
