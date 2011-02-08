@@ -12,10 +12,17 @@ use AnyEvent;
 our @ISA = qw(Exporter);
 
 our %EXPORT_TAGS = (
-    all     => [ qw( mutex rw_mutex async_for async_repeat async_rfor pool ) ],
+    all => [
+            qw(
+                    mutex rw_mutex
+                    async_for async_repeat
+                    async_rfor async_foreach
+                    pool buffer
+            )
+    ],
     mutex   => [ qw( mutex rw_mutex ) ],
     foreach => [ qw( async_for async_rfor async_repeat )   ],
-    pool    => [ qw( pool ) ],
+    pool    => [ qw( pool buffer ) ],
 
 
 );
@@ -24,7 +31,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = qw();
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 sub pool(@)
 {
@@ -37,6 +44,19 @@ sub pool(@)
     };
 
     goto &pool;
+}
+
+
+sub buffer(@)
+{
+    require AnyEvent::Tools::Buffer;
+    no warnings 'redefine';
+    no strict 'refs';
+    *{ __PACKAGE__ . "::buffer" } = sub (@) {
+        return new AnyEvent::Tools::Buffer(@_);
+    };
+
+    goto &buffer;
 }
 
 sub mutex()
@@ -112,6 +132,10 @@ sub async_for($&;&) {
 
     croak "Usage: async_for ARRAYREF|HASHREF, callback [, end_callback ]";
 }
+
+
+sub async_foreach($&;&) { goto &async_for; }
+
 
 sub async_rfor($&;&) {
     my ($obj, $cb, $cbe) = @_;
@@ -310,7 +334,7 @@ AnyEvent::Tools - instrument collection for L<AnyEvent>.
     }
 
 
-=head2 FOREACHES
+=head2 Foreaches
 
     use AnyEvent::Tools qw(:foreach);
 
@@ -350,6 +374,30 @@ AnyEvent::Tools - instrument collection for L<AnyEvent>.
                 ... # do something after all cycles
 
             };
+
+
+=head2 Buffers
+
+    use AnyEvent::Tools ':pool';    # pool and buffer
+    use AnyEvent::Tools qw(buffer); # buffer only
+    my $buffer = buffer;
+    $buffer->on_flush( sub { ($guard, $objects_aref) = @_; .... });
+
+    ...
+
+    $buffer->push($obj1);
+    $buffer->push($obj2);
+    $buffer->push($obj3);
+    $buffer->push($obj4);
+
+    $buffer->flush;
+
+
+    # autoflush after 30 second
+    $buffer->interval(30);
+
+    # autoflush if it contains more than 50 elements
+    $buffer->size(50);
 
 
 =head1 DESCRIPTION
@@ -539,8 +587,8 @@ object of the collection using the method:
 
     $pool->get(sub { my ($guard, $object) = @_; ... });
 
-If there is a free object in pool, it will call Your callback.
-The callback receives a guard. Hold the guard while You use the
+If there is a free object in the pool, Your callback will be called.
+The callback receives also a guard. Hold the guard while You use the
 object.
 
 
@@ -560,9 +608,52 @@ that to delete the object from pool:
 
 Deletes object from pool.
 
-B<Note>: The function will croak if it receives ivalid object id.
+B<Note>: The function will croak if it receives an ivalid object id.
 
-=cut
+
+=head2 buffer
+
+Returns the buffer object. Can receive a few named arguments: L<interval>,
+L<size>, L<on_flush>. They are the same that the following functions.
+
+It provides the following methods:
+
+=head3 push
+
+Push the pbject into buffer.
+
+    $buffer->push(123);
+    $buffer->push($obj);
+
+=head3 flush
+
+Flush buffer (calls L<on_flush> function)
+
+=head3 interval
+
+Get/Set autoflush interval (zero == periodical autoflush is disabled)
+
+
+=head3 size
+
+Get/Set buffer size (zero == buffer overflow autoflush is disabled)
+
+=head3 on_flush
+
+Set flush callback. It will be called if L<flush> function is called or
+buffer overflow is detected or timeout is exceeded.
+
+The callback receives two arguments:
+
+=over
+
+=item guard
+
+If You hold the guard, and user calls L<flush>, flushing will be delayed.
+
+=item arrayref
+
+Reference to object list that were accumulated.
 
 =head1 SEE ALSO
 

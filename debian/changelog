@@ -1,3 +1,9 @@
+libanyevent-tools-perl (0.04-1) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Dmitry E. Oboukhov <unera@debian.org>  Tue, 08 Feb 2011 11:10:12 +0300
+
 libanyevent-tools-perl (0.02-1) unstable; urgency=low
 
   * Initial release. (Closes: #XXXXXX)

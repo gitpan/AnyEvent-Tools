@@ -73,7 +73,11 @@ sub _check_pool
                         splice @{ $self->{free} }, $fi, 1;
                         splice @{ $self->{delete} }, $di, 1;
                         delete $self->{pool}{$no};
-                        $cb->() if $cb;
+                        if ($cb) {
+                            $cb->();
+                            goto &_check_pool if $self;
+                            return;
+                        }
                         next CHECK_CYCLE;
                     }
                 }
@@ -88,8 +92,10 @@ sub _check_pool
     my $cb = shift @{ $self->{queue} };
 
     my $guard = guard {
-        push @{ $self->{free} }, $ono;
-        $self->_check_pool;
+        if ($self) {        # can be destroyed
+            push @{ $self->{free} }, $ono;
+            $self->_check_pool;
+        }
     };
 
     $cb->($guard, $self->{pool}{$ono});

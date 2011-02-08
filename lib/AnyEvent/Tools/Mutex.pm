@@ -22,7 +22,9 @@ sub lock
     $self->_check_mutex;
     return unless defined wantarray;
     return unless keys %{ $self->{cache} };
-    return guard { $self->_check_mutex if $self->_delete_client($name) };
+    return guard {
+        $self->_check_mutex if $self and $self->_delete_client($name)
+    };
 }
 
 sub is_locked
@@ -66,7 +68,13 @@ sub _check_mutex
     $self->{process}++;
     my $info = $self->{queue}[0];
     $self->_delete_client($info->[0]);
-    $info->[1]->(guard { $self->{process}--; $self->_check_mutex });
+    my $guard = guard {
+        if ($self) {    # it can be aleady destroyed
+            $self->{process}--;
+            $self->_check_mutex;
+        }
+    };
+    $info->[1]->($guard);
 }
 
 1;
