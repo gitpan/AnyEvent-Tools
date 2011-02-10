@@ -31,7 +31,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = qw();
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 sub pool(@)
 {
@@ -433,7 +433,7 @@ Example:
         undef $guard;       # unlock mutex
     });
 
-The callback receives a guard (see L<AnyEvent::Util::guard>) which unlocks the
+The callback receives a guard (see L<AnyEvent::Util#guard>) which unlocks the
 mutex. Hold the guard while You need locked resourse.
 
 =head3 is_locked
@@ -464,6 +464,13 @@ possible the mutex will be locked and Your callback will be called.
 There may be only one write process that catches the lock.
 
 Both callbacks receive a guard to hold the mutex locked.
+
+
+=head3 rlock_limit(NUMBER)
+
+Get/Set count limit for rlock. If an rlock request is come and this limit
+is reached the request will be queued.
+
 
 =head3 is_locked
 

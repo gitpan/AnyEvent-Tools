@@ -96,5 +96,5 @@ BEGIN {
     my ($f, $s) = grep { $_->{obj} eq 'c' } @res;
 
     ok $s->{time} - $f->{time} >= 0.5, "Sequence order is right";
-    ok $dtime - $f->{time} >= 0.5, "delete only if resource free";
+    ok $dtime - $f->{time} >= 0.45, "delete only if resource free";
 }

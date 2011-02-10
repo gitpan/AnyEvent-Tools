@@ -6,7 +6,7 @@ use utf8;
 use open qw(:std :utf8);
 use lib qw(lib ../lib);
 
-use Test::More tests    => 7;
+use Test::More tests    => 8;
 use Encode qw(decode encode);
 use Time::HiRes qw(time);
 
@@ -131,4 +131,36 @@ BEGIN {
         "Read lock waited until write lock is done";
     ok abs($res{fifth} - $res{'fourth-start'}) < .001,
         "Waited rlocks sarted simultaneously";
+}
+
+
+{
+    my $cv = condvar AnyEvent;
+    my $mutex = rw_mutex;
+    $mutex->rlock_limit(2);
+    my @res;
+
+    for my $step (1 .. 20) {
+        $mutex->rlock(sub {
+            my ($g) = @_;
+            my $t;
+            $t = AE::timer .1, 0, sub {
+                push @res, time;
+                undef $t;
+                undef $g;
+
+                $cv->send if $step == 20;
+            };
+        });
+    }
+
+    $cv->recv;
+
+    my $ok = 1;
+    for (my $i = 0; $i < @res - 2; $i += 2) {
+        $ok = $res[$i + 2] - $res[$i] >= .095;
+        last unless $ok;
+    }
+
+    ok $ok, "rlock_limit works fine";
 }

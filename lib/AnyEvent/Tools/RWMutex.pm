@@ -11,7 +11,8 @@ sub new
         hno         => 0,
         rprocess    => 0,
         wprocess    => 0,
-        cache       => {}
+        cache       => {},
+        rlock_limit => 0,
     } => ref($class) || $class;
 }
 
@@ -30,6 +31,13 @@ for my $m (qw(wlock rlock)) {
             $self->_check_mutex if $self and $self->_delete_client($name)
         };
     }
+}
+
+sub rlock_limit
+{
+    my ($self, $value) = @_;
+    return $self->{rlock_limit} if @_ == 1;
+    return $self->{rlock_limit} = $value || 0;
 }
 
 sub is_wlocked
@@ -111,6 +119,9 @@ sub _check_mutex
 
     return;
     LOCK_RMUTEX:
+        return if $self->rlock_limit
+            and $self->{rprocess} >= $self->rlock_limit;
+
         $info = $self->{rlock}[0];
         $self->_delete_client($info->[0]);
         $self->{rprocess}++;
