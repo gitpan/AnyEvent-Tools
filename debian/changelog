@@ -1,8 +1,9 @@
-libanyevent-tools-perl (0.05-1) unstable; urgency=low
+libanyevent-tools-perl (0.06-1) unstable; urgency=low
 
   * New upstream version (add rlock_limit).
+  * A few tests were rewritten.
 
- -- Dmitry E. Oboukhov <unera@debian.org>  Thu, 10 Feb 2011 09:50:03 +0300
+ -- Dmitry E. Oboukhov <unera@debian.org>  Fri, 11 Feb 2011 09:37:52 +0300
 
 libanyevent-tools-perl (0.04-1) unstable; urgency=low
 

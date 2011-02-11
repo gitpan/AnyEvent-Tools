@@ -27,6 +27,7 @@ BEGIN {
     my @res;
 
     my $busy = 0;
+    my $cnt = 1;
     my $idle;
 
     $idle = AE::idle  sub {
@@ -46,6 +47,8 @@ BEGIN {
                 }
             };
         });
+
+        undef $idle if $cnt++ >= 40;
     };
 
 

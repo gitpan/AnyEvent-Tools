@@ -17,3 +17,6 @@ Revision history for Perl extension AnyEvent::Tools.
 
 0.05  Thu Feb 10 09:54:36 MSK 2011
         - add 'rlock_limit' into rw_mutex.
+
+0.06  Fri Feb 11 09:36:10 MSK 2011
+        - pool.t was rewritten.
