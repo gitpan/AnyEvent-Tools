@@ -61,7 +61,8 @@ BEGIN {
         last unless $ok;
     }
 
-    ok $ok, "Sequence order is right";
+    diag explain \@res unless
+        ok $ok, "Sequence order is right";
     ok 0 == grep({ $_->{b} > 2 } @res), "Pool works fine";
 }
 
@@ -98,6 +99,7 @@ BEGIN {
     ok 2 == grep({ $_->{obj} eq 'c' } @res), "delete method works fine";
     my ($f, $s) = grep { $_->{obj} eq 'c' } @res;
 
-    ok $s->{time} - $f->{time} >= 0.5, "Sequence order is right";
+    diag explain \@res unless
+        ok $s->{time} - $f->{time} >= 0.45, "Sequence order is right";
     ok $dtime - $f->{time} >= 0.45, "delete only if resource free";
 }

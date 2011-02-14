@@ -31,15 +31,15 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = qw();
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
-sub pool(@)
+sub pool(;@)
 {
     require AnyEvent::Tools::Pool;
 
     no strict 'refs';
     no warnings 'redefine';
-    *{ __PACKAGE__ . "::pool" } = sub (@) {
+    *{ __PACKAGE__ . "::pool" } = sub (;@) {
         return AnyEvent::Tools::Pool->new(@_);
     };
 
@@ -47,12 +47,12 @@ sub pool(@)
 }
 
 
-sub buffer(@)
+sub buffer(;@)
 {
     require AnyEvent::Tools::Buffer;
     no warnings 'redefine';
     no strict 'refs';
-    *{ __PACKAGE__ . "::buffer" } = sub (@) {
+    *{ __PACKAGE__ . "::buffer" } = sub (;@) {
         return new AnyEvent::Tools::Buffer(@_);
     };
 

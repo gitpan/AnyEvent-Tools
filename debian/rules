@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
 include /usr/share/cdbs/1/rules/debhelper.mk
-include /usr/share/cdbs/1/class/perl-makemaker-vars.mk
+include /usr/share/cdbs/1/class/perl-makemaker.mk
 
 MAIN_MODULE	= lib/AnyEvent/Tools.pm
 
