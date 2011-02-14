@@ -31,15 +31,15 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = qw();
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
-sub pool(;@)
+sub pool(@)
 {
     require AnyEvent::Tools::Pool;
 
     no strict 'refs';
     no warnings 'redefine';
-    *{ __PACKAGE__ . "::pool" } = sub (;@) {
+    *{ __PACKAGE__ . "::pool" } = sub (@) {
         return AnyEvent::Tools::Pool->new(@_);
     };
 
@@ -47,12 +47,12 @@ sub pool(;@)
 }
 
 
-sub buffer(;@)
+sub buffer(@)
 {
     require AnyEvent::Tools::Buffer;
     no warnings 'redefine';
     no strict 'refs';
-    *{ __PACKAGE__ . "::buffer" } = sub (;@) {
+    *{ __PACKAGE__ . "::buffer" } = sub (@) {
         return new AnyEvent::Tools::Buffer(@_);
     };
 
@@ -651,6 +651,13 @@ Set flush callback. It will be called if L<flush> function is called or
 buffer overflow is detected or timeout is exceeded.
 
 The callback receives two arguments:
+
+=head3 unique_cb
+
+If the callback is defined it will be called for each pushing element
+to determine its key value. If the key has already appeared since last
+L<flush> the element will be ignored. So buffer will contain only unique
+objects.
 
 =over
 

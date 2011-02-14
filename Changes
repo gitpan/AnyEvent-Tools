@@ -23,3 +23,6 @@ Revision history for Perl extension AnyEvent::Tools.
 
 0.07  Mon Feb 14 10:55:33 MSK 2011
 	- all tests pass under EV.
+
+0.08  Mon Feb 14 18:08:06 MSK 2011
+        - add unique_cb to buffer

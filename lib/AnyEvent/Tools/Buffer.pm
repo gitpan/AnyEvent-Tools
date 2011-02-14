@@ -16,14 +16,17 @@ sub new
 
     my $self = bless {
         queue       => [],
+        exists      => {},
         timer       => undef,
         lock        => 0,
         do_flush    => 0,
+        unique_cb   => undef,
     } => ref($class) || $class;
 
     $self->on_flush($opts{on_flush});
     $self->size($opts{size} || 0);
     $self->interval($opts{interval} || 0);
+    $self->unique_cb($opts{unique_cb});
 
     return $self;
 }
@@ -43,10 +46,39 @@ sub on_flush
     return $self->{on_flush} = $cb;
 }
 
+sub unique_cb
+{
+    my ($self, $cb) = @_;
+
+    # disable unique checking
+    unless($cb) {
+        $self->{exists} = {};
+        return $self->{unique_cb} = $cb;
+    }
+
+    croak "unique_cb must be CODEREF" unless 'CODE' eq ref $cb;
+    $self->flush;
+    return $self->{unique_cb} = $cb;
+}
+
 sub push
 {
     my ($self, @data) = @_;
-    push @{ $self->{queue} }, @data if @data;
+    if (@data) {
+        if ($self->{unique_cb}) {
+            for my $add (@data) {
+                my $key = $self->{unique_cb}->($add);
+                croak "unique_cb must return defined SCALAR"
+                    if ref $key or !defined($key);
+                next if exists $self->{exists}{$key};
+                $self->{exists}{$key} = @{ $self->{queue} };
+                push @{ $self->{queue} }, $add;
+            }
+
+        } else {
+            push @{ $self->{queue} }, @data;
+        }
+    }
 
     $self->_check_buffer;
     return;
@@ -75,15 +107,14 @@ sub flush
     undef $self->{timer};
     my $queue = $self->{queue};
     $self->{queue} = [];
+    $self->{exists} = {};
     my $guard = guard {
         if ($self) {    # it can be destroyed
             $self->{lock} = 0;
 
             if ($self->{do_flush}) {
                 $self->{do_flush} = 0;
-                if (@{ $self->{queue} }) {
-                    $self->flush;
-                }
+                $self->flush if @{ $self->{queue} };
             }
             $self->_check_buffer if $self; # can be destroyed again
 

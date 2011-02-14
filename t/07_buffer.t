@@ -6,7 +6,7 @@ use utf8;
 use open qw(:std :utf8);
 use lib qw(lib ../lib);
 
-use Test::More tests    => 11;
+use Test::More tests    => 13;
 use Encode qw(decode encode);
 use Time::HiRes qw(time);
 use AnyEvent;
@@ -74,4 +74,27 @@ BEGIN {
         ok $delay >= $time[$_], "$_ flush was in time (count: $count)";
         ok $delay <  $time[$_ + 1], "$_ flush was in time";
     }
+}
+
+{
+    my @res;
+    my $cv = condvar AnyEvent;
+    my $idle;
+
+    my $count =  0;
+    my $b = buffer
+        unique_cb   => sub { $_[0][0] },
+        interval    => 0.05,
+        on_flush    => sub {
+            push @res, $_[1];
+            $count = 0;
+            $cv->send if @res >= 100
+        };
+
+    $idle = AE::idle sub { $b->push([int rand 10, ++$count ]) };
+
+    $cv->recv;
+
+    ok !grep({ @$_ > 10 } @res), "Unique elements were extract";
+    ok 10 < grep({ 0 < grep { $_->[1] > 10 } @$_ } @res), "A lot of pushes";
 }
