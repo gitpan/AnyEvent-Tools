@@ -1,3 +1,9 @@
+libanyevent-tools-perl (0.09-1) unstable; urgency=low
+
+  * New upstream version (add unshift and unshift_back functions).
+
+ -- Dmitry E. Oboukhov <unera@debian.org>  Wed, 16 Feb 2011 23:51:11 +0300
+
 libanyevent-tools-perl (0.08-1) unstable; urgency=low
 
   * New upstream version (add unique_cb function).

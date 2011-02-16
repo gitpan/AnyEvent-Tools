@@ -117,7 +117,7 @@ BEGIN {
     ok 9 == grep({ $res{$_}{start_time} - $res{$_ - 1}{start_time} > 0.045  }
         1 .. 9), "Hold guard test";
 
-    ok 10 == grep({ $res{$_}{time} >= .05 } 0 .. 9),
+    ok 10 == grep({ $res{$_}{time} >= .045 } 0 .. 9),
         "All timers have done";
 
 }

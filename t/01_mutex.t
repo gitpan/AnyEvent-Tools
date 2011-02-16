@@ -31,19 +31,19 @@ BEGIN {
     my $cv = condvar AnyEvent;
 
     my ($timer1, $timer2, $timer3);
-    $timer1 = AE::timer 0, 0.04 => sub {
+    $timer1 = AE::timer 0, 0.2 => sub {
         $total++;
         if ($mutex->is_locked) {
             $counter++;
         }
     };
 
-    $timer2 = AE::timer 0.2, 0 => sub {
+    $timer2 = AE::timer 1, 0 => sub {
         $mutex->lock(sub {
             my ($g) = @_;
             undef $timer2;
             my $timer;
-            $timer = AE::timer 0.4, 0 => sub {
+            $timer = AE::timer 2, 0 => sub {
                 undef $g;
                 undef $timer;
             };
@@ -51,7 +51,7 @@ BEGIN {
         return;
     };
 
-    $timer3 = AE::timer 1, 0 => sub {
+    $timer3 = AE::timer 5, 0 => sub {
         $cv->send;
     };
 

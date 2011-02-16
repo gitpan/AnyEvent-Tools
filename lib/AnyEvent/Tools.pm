@@ -31,7 +31,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = qw();
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 sub pool(@)
 {
@@ -627,10 +627,25 @@ It provides the following methods:
 
 =head3 push
 
-Push the pbject into buffer.
+Push the object into buffer.
 
     $buffer->push(123);
     $buffer->push($obj);
+    $buffer->push(1,2,3);
+
+=head3 unshift
+
+Unshift the object into buffer
+
+    $buffer->unshift(123);
+    $buffer->unshift(1,2,3);
+
+=head3 unshift_back
+
+The function can be called only inside L<on_flush> handler (until its
+guard destroyed). It can be used to unshift non-flushed data (for
+example: if an error was occured) back to buffer. Receives B<ARRAYREF>
+(like L<on_flush>'s callback).
 
 =head3 flush
 
@@ -645,19 +660,19 @@ Get/Set autoflush interval (zero == periodical autoflush is disabled)
 
 Get/Set buffer size (zero == buffer overflow autoflush is disabled)
 
-=head3 on_flush
-
-Set flush callback. It will be called if L<flush> function is called or
-buffer overflow is detected or timeout is exceeded.
-
-The callback receives two arguments:
-
 =head3 unique_cb
 
 If the callback is defined it will be called for each pushing element
 to determine its key value. If the key has already appeared since last
 L<flush> the element will be ignored. So buffer will contain only unique
 objects.
+
+=head3 on_flush
+
+Set flush callback. It will be called if L<flush> function is called or
+buffer overflow is detected or timeout is exceeded.
+
+The callback receives two arguments:
 
 =over
 

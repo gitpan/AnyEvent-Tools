@@ -61,26 +61,71 @@ sub unique_cb
     return $self->{unique_cb} = $cb;
 }
 
-sub push
+sub push :method
 {
     my ($self, @data) = @_;
     if (@data) {
         if ($self->{unique_cb}) {
-            for my $add (@data) {
+            while(@data) {
+                my $add = shift @data;
                 my $key = $self->{unique_cb}->($add);
                 croak "unique_cb must return defined SCALAR"
                     if ref $key or !defined($key);
                 next if exists $self->{exists}{$key};
-                $self->{exists}{$key} = @{ $self->{queue} };
+                $self->{exists}{$key} = 1;
                 push @{ $self->{queue} }, $add;
             }
-
         } else {
             push @{ $self->{queue} }, @data;
         }
     }
 
     $self->_check_buffer;
+    return;
+}
+
+sub unshift :method
+{
+    my ($self, @data) = @_;
+    if (@data) {
+        if ($self->{unique_cb}) {
+            while(@data) {
+                my $add = pop @data;
+                my $key = $self->{unique_cb}->($add);
+                croak "unique_cb must return defined SCALAR"
+                    if ref $key or !defined($key);
+                next if exists $self->{exists}{$key};
+                $_++ for values %{ $self->{exists} };
+                $self->{exists}{$key} = 1;
+                unshift @{ $self->{queue} }, $add;
+            }
+        } else {
+            unshift @{ $self->{queue} }, @data;
+        }
+    }
+
+    $self->_check_buffer;
+    return;
+}
+
+sub unshift_back
+{
+    my ($self, $data) = @_;
+    croak "Guard has already been destroyed" unless $self->{lock};
+    unless ($self->{unique_cb}) {
+        unshift @{ $self->{queue} }, @$data;
+        return;
+    }
+
+    my @buffer;
+    $self->{exists} = {};
+    for (@$data, @{ $self->{queue} }) {
+        my $key = $self->{unique_cb}->($_);
+        next if exists $self->{exists}{$key};
+        $self->{exists}{$key} = 1;
+        push @buffer, $_;
+    }
+    $self->{queue} = \@buffer;
     return;
 }
 
@@ -108,16 +153,28 @@ sub flush
     my $queue = $self->{queue};
     $self->{queue} = [];
     $self->{exists} = {};
-    my $guard = guard {
-        if ($self) {    # it can be destroyed
-            $self->{lock} = 0;
+    my $guard = guard sub {
 
-            if ($self->{do_flush}) {
-                $self->{do_flush} = 0;
-                $self->flush if @{ $self->{queue} };
-            }
+        return unless $self;  # it can be destroyed
+
+        $self->{lock} = 0;
+
+        if ($self->{do_flush}) {
+            $self->{do_flush} = 0;
+            return unless @{ $self->{queue} };
+            my $idle;
+            $idle = AE::idle sub { # avoid recursion
+                undef $idle;
+                $self->flush if $self;
+            };
+            return;
+        }
+        return unless $self;
+        return unless @{ $self->{queue} };
+        my $idle;
+        $idle = AE::idle sub { # avoid recursion
+            undef $idle;
             $self->_check_buffer if $self; # can be destroyed again
-
         }
     };
     $self->{lock} = 1;
