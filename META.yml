@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               AnyEvent-Tools
-version:            0.09
+version:            0.10
 abstract:           instrument collection for L<AnyEvent>.
 author:
     - Dmitry E. Oboukhov <unera@debian.org>
@@ -11,7 +11,8 @@ configure_requires:
 build_requires:
     ExtUtils::MakeMaker:  0
 requires:
-    AnyEvent:  0
+    AnyEvent:             0
+    AnyEvent::AggressiveIdle:  0.02
 no_index:
     directory:
         - t

@@ -3,6 +3,7 @@ use strict;
 use warnings;
 
 package AnyEvent::Tools::Buffer;
+use AnyEvent::AggressiveIdle qw(aggressive_idle stop_aggressive_idle);
 use AnyEvent::Util;
 use Carp;
 
@@ -162,20 +163,19 @@ sub flush
         if ($self->{do_flush}) {
             $self->{do_flush} = 0;
             return unless @{ $self->{queue} };
-            my $idle;
-            $idle = AE::idle sub { # avoid recursion
-                undef $idle;
+            aggressive_idle sub { # avoid recursion
+                stop_aggressive_idle $_[0];
                 $self->flush if $self;
             };
             return;
         }
         return unless $self;
         return unless @{ $self->{queue} };
-        my $idle;
-        $idle = AE::idle sub { # avoid recursion
-            undef $idle;
+        aggressive_idle sub { # avoid recursion
+            stop_aggressive_idle $_[0];
             $self->_check_buffer if $self; # can be destroyed again
-        }
+        };
+        return;
     };
     $self->{lock} = 1;
     $self->{on_flush}->($guard, $queue);

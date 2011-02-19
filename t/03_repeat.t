@@ -51,7 +51,7 @@ BEGIN {
     async_repeat 10, sub { $count++ }, sub { $cv->send };
     $cv->recv;
 
-    ok $count == 10, "Repeat 10 times";
+   diag $count unless ok $count == 10, "Repeat 10 times";
 }
 
 {

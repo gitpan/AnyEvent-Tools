@@ -6,7 +6,7 @@ use utf8;
 use open qw(:std :utf8);
 use lib qw(lib ../lib);
 
-use Test::More tests    => 24;
+use Test::More tests    => 25;
 use Encode qw(decode encode);
 use Time::HiRes qw(time);
 use AnyEvent;
@@ -18,6 +18,7 @@ BEGIN {
     binmode $builder->failure_output, ":utf8";
     binmode $builder->todo_output,    ":utf8";
 
+    use_ok 'AnyEvent::AggressiveIdle', 'aggressive_idle';
     use_ok 'AnyEvent::Tools', 'buffer';
 }
 
@@ -33,7 +34,7 @@ BEGIN {
         };
 
     my $idle;
-    $idle = AE::idle sub {
+    $idle = aggressive_idle sub {
         $b->push($number++);
         if ($number > 100) {
             $b->flush;
@@ -74,7 +75,7 @@ BEGIN {
             }
         };
 
-    $idle = AE::idle sub {
+    $idle = aggressive_idle sub {
         $b->push($number++);
     };
 
@@ -111,7 +112,7 @@ BEGIN {
             $cv->send;
         };
 
-    $idle = AE::idle sub {  $b->unshift($number++); };
+    $idle = aggressive_idle sub {  $b->unshift($number++); };
 
     $cv->recv;
 
@@ -148,7 +149,7 @@ BEGIN {
             $cv->send if @res >= 100
         };
 
-    $idle = AE::idle sub { $b->push([int rand 10, ++$count ]) };
+    $idle = aggressive_idle sub { $b->push([int rand 10, ++$count ]) };
 
     $cv->recv;
 

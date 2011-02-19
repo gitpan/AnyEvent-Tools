@@ -1,3 +1,10 @@
+libanyevent-tools-perl (0.10-1) unstable; urgency=low
+
+  * Use aggressive_idle instead AE::idle.
+  * New upstream version.
+
+ -- Dmitry E. Oboukhov <unera@debian.org>  Sat, 19 Feb 2011 17:11:14 +0300
+
 libanyevent-tools-perl (0.09-1) unstable; urgency=low
 
   * New upstream version (add unshift and unshift_back functions).

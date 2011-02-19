@@ -26,3 +26,6 @@ Revision history for Perl extension AnyEvent::Tools.
 
 0.08  Mon Feb 14 18:08:06 MSK 2011
         - add unique_cb to buffer
+
+0.10  Sat Feb 19 22:20:39 MSK 2011
+	- use aggressive_idle instead AE::idle

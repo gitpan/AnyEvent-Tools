@@ -7,7 +7,7 @@ use Carp;
 
 require Exporter;
 use AnyEvent::Util;
-use AnyEvent;
+use AnyEvent::AggressiveIdle qw(aggressive_idle stop_aggressive_idle);
 
 our @ISA = qw(Exporter);
 
@@ -31,7 +31,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = qw();
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 sub pool(@)
 {
@@ -189,48 +189,54 @@ sub async_rfor($&;&) {
 sub _async_repeati($$&;&) {
     my ($start, $count, $cb, $cbe) = @_;
 
-    my $catched_guard = 1;
     my $idle;
     my $wantarray = wantarray;
-    $idle = AE::idle sub {
+    my $caught_guard = 1;
+    $idle = aggressive_idle sub {
         my $first = $start == 0;
-        my $last  = $start == $count - 1;
-        $catched_guard = 1;
-        {
-            my $guard;
-
-            if ($last) {
-                undef $idle;
-                $guard = guard { $cbe->() if $cbe };
-            } else {
-                $guard = guard {
-                    if ($catched_guard) {
-                        $catched_guard = 0;
-                    } elsif(defined $wantarray) {
-                        $idle = &_async_repeati($start + 1, $count, $cb, $cbe);
-                    } else {
-                        &_async_repeati($start + 1, $count, $cb, $cbe);
-                    }
-                };
-            }
+        my $last  = $start >= $count - 1;
 
 
-            $cb->($guard, $start, $first, $last);
+        if ($last) {
+            undef $idle;
+            $cb->(guard { $cbe->() if $cbe; undef $cbe; },
+                $start, $first, $last
+            );
+            undef $cb;
+            return;
         }
 
-        if ($catched_guard) {
+        {
+            $caught_guard = 1;
+            $cb->(guard {
+
+                    if ($caught_guard) {
+                        $caught_guard = 0;
+                        return;
+                    }
+
+                    unless(defined $wantarray) {
+                        &_async_repeati($start + 1, $count, $cb, $cbe);
+                        return;
+                    }
+
+                    $idle = &_async_repeati($start + 1, $count, $cb, $cbe);
+                }, $start, $first, $last
+            );
+        }
+
+        if ($caught_guard) {
             # callback has catched our $guard. It will continue by itself
-            $catched_guard = 0;
+            $caught_guard = 0;
             undef $idle;
             return;
         }
 
-        return if ++$start < $count;
-        undef $idle;
+        $start++;
     };
 
     return unless defined $wantarray;
-    return guard { $catched_guard = 1; undef $cbe; undef $idle; };
+    return guard { $caught_guard = 1; undef $cbe; undef $cb; undef $idle; };
 }
 
 1;
