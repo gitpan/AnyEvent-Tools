@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               AnyEvent-Tools
-version:            0.10
+version:            0.11
 abstract:           instrument collection for L<AnyEvent>.
 author:
     - Dmitry E. Oboukhov <unera@debian.org>

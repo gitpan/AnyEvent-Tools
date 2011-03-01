@@ -36,7 +36,7 @@ BEGIN {
             $busy++;
             push @res, { b => $busy, t => time };
             my $timer;
-            $timer = AE::timer 0.01, 0 => sub {
+            $timer = AE::timer 0.1, 0 => sub {
                 $busy--;
                 undef $timer;
                 undef $guard;
@@ -57,7 +57,7 @@ BEGIN {
 
     my $ok;
     for (my $i = 0 ; $i < @res - 2; $i += 2) {
-        $ok = $res[$i + 2]{t} - $res[$i]{t} >= .009;
+        $ok = $res[$i + 2]{t} - $res[$i]{t} >= .09;
         last unless $ok;
     }
 

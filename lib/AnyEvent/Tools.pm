@@ -7,7 +7,7 @@ use Carp;
 
 require Exporter;
 use AnyEvent::Util;
-use AnyEvent::AggressiveIdle qw(aggressive_idle stop_aggressive_idle);
+use AnyEvent::AggressiveIdle 0.04, qw(aggressive_idle stop_aggressive_idle);
 
 our @ISA = qw(Exporter);
 
@@ -31,7 +31,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 
 our @EXPORT = qw();
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 sub pool(@)
 {
@@ -191,52 +191,27 @@ sub _async_repeati($$&;&) {
 
     my $idle;
     my $wantarray = wantarray;
-    my $caught_guard = 1;
     $idle = aggressive_idle sub {
+
+        my (undef, $guard) = @_;
         my $first = $start == 0;
         my $last  = $start >= $count - 1;
 
-
-        if ($last) {
+        if ($start >= $count) {
+            $cbe->() if $cbe;
             undef $idle;
-            $cb->(guard { $cbe->() if $cbe; undef $cbe; },
-                $start, $first, $last
-            );
             undef $cb;
+            undef $cbe;
+            undef $guard;
             return;
         }
 
-        {
-            $caught_guard = 1;
-            $cb->(guard {
-
-                    if ($caught_guard) {
-                        $caught_guard = 0;
-                        return;
-                    }
-
-                    unless(defined $wantarray) {
-                        &_async_repeati($start + 1, $count, $cb, $cbe);
-                        return;
-                    }
-
-                    $idle = &_async_repeati($start + 1, $count, $cb, $cbe);
-                }, $start, $first, $last
-            );
-        }
-
-        if ($caught_guard) {
-            # callback has catched our $guard. It will continue by itself
-            $caught_guard = 0;
-            undef $idle;
-            return;
-        }
-
+        $cb->($guard, $start, $first, $last);
         $start++;
     };
 
     return unless defined $wantarray;
-    return guard { $caught_guard = 1; undef $cbe; undef $cb; undef $idle; };
+    return guard { undef $cbe; undef $cb; undef $idle; };
 }
 
 1;

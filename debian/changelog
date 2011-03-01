@@ -1,9 +1,10 @@
-libanyevent-tools-perl (0.10-1) unstable; urgency=low
+libanyevent-tools-perl (0.11-1) unstable; urgency=low
 
   * Use aggressive_idle instead AE::idle.
   * New upstream version.
+  * Use aggressive_idle's guard instead internal.
 
- -- Dmitry E. Oboukhov <unera@debian.org>  Sat, 19 Feb 2011 17:11:14 +0300
+ -- Dmitry E. Oboukhov <unera@debian.org>  Tue, 01 Mar 2011 13:50:55 +0300
 
 libanyevent-tools-perl (0.09-1) unstable; urgency=low
 

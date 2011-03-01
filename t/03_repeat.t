@@ -200,8 +200,8 @@ BEGIN {
     my $timer = AE::timer 0.05 * 16, 0 => sub { $cv->send };
     $cv->recv;
 
-
-    ok $count == 10, "Cancel repeating with catching guards";
+    diag $count unless ok $count == 10,
+                            "Cancel repeating with catching guards";
 }
 
 {
@@ -225,8 +225,8 @@ BEGIN {
     $cv->recv;
 
 
-    ok $count == 10,
-        "Cancel repeating with catching guards, after freeing guard";
+    diag $count unless  ok $count == 10,
+                "Cancel repeating with catching guards, after freeing guard";
 }
 
 
