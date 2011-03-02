@@ -7,7 +7,7 @@ WriteMakefile(
     VERSION_FROM      => 'lib/AnyEvent/Tools.pm', # finds $VERSION
     PREREQ_PM         => {
         AnyEvent                    => '0',	
-        'AnyEvent::AggressiveIdle'  => '0.02',
+        'AnyEvent::AggressiveIdle'  => '0.04',
     }, # e.g., Module::Name => 1.1
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/AnyEvent/Tools.pm', # retrieve abstract from module
